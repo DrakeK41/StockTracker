@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Tracker</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>📈 Real-Time Stock Tracker</h1>
+
+        <div class="controls">
+            <input type="text" id="stockInput" placeholder="Enter stock symbol (e.g., NFLX)" />
+            <button onclick="addStock()">➕ Add Stock</button>
+            <button onclick="removeStock()">❌ Remove Stock</button>
+        </div>
+
+        <div class="stocks" id="stocks">Loading stock data...</div>
+    </div>
+
+    <script>
+        async function fetchStocks() {
+            try {
+                const res = await fetch("/stocks");
+                const data = await res.json();
+                const stocksDiv = document.getElementById("stocks");
+                stocksDiv.innerHTML = '';
+                for (let symbol in data) {
+                    let price = data[symbol];
+                    stocksDiv.innerHTML += `<div class="stock"><strong>${symbol}</strong>: $${price}</div>`;
+                }
+            } catch (err) {
+                console.error("Error fetching stocks:", err);
+            }
+        }
+    
+        async function addStock() {
+            const symbol = document.getElementById("stockInput").value;
+            if (!symbol) return;
+            await fetch("/add-stock", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ symbol })
+            });
+            fetchStocks();
+        }
+    
+        async function removeStock() {
+            const symbol = document.getElementById("stockInput").value;
+            if (!symbol) return;
+            await fetch("/remove-stock", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ symbol })
+            });
+            fetchStocks();
+        }
+    
+        setInterval(fetchStocks, 5000);
+        window.onload = fetchStocks;
+    </script>
+    
+</body>
+</html>
